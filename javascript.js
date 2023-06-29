@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
         editableCells[i].addEventListener('blur', handleBlur);
         // Added keyup event
         editableCells[i].addEventListener('keyup', handleKeyup); 
+
+        // If the cell is a unit price cell, add a special event listener
+        if (editableCells[i].classList.contains('unit-price')) {
+            editableCells[i].addEventListener('input', updateAllUnitPrices);
+        }
     }
 
     function handleFocus(e) {
@@ -23,6 +28,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function handleKeyup(e) {
         if (e.target.innerText === '') {
             updateTotal(e);
+        }
+    }
+
+    // New function to update all unit prices
+    function updateAllUnitPrices(e) {
+        var newUnitPrice = e.target.innerText;
+        var rows = table.getElementsByTagName('tr');
+
+        for (var i = 0; i < rows.length; i++) {
+            var unitPriceCell = rows[i].getElementsByClassName('unit-price')[0];
+            if (unitPriceCell) {
+                unitPriceCell.innerText = newUnitPrice;
+            }
+
+            // Manually call the updateTotal function for the row
+            var quantityCell = rows[i].getElementsByClassName('quantity')[0];
+            if (quantityCell) {
+                updateTotal({ target: quantityCell });
+            }
         }
     }
 
