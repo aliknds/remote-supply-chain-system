@@ -1,0 +1,107 @@
+/* Mobile-first styles: these styles are for all devices, but will be overridden for larger devices */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    padding-top: 60px;
+}
+
+.container {
+    padding: 20px;
+}
+
+/* Navigation menu: on small screens, it will be a vertical list */
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav ul li {
+    margin-bottom: 1em;
+}
+
+/* Media query for larger screens */
+@media screen and (min-width: 600px) {
+    body {
+        font-size: 18px;
+    }
+
+    .container {
+        padding: 40px;
+    }
+
+    /* Navigation menu: on larger screens, it will be a horizontal list */
+    nav ul li {
+        display: inline;
+        margin-right: 1em;
+        margin-bottom: 0;
+    }
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* Table headers */
+table th {
+    background-color: #f5f6f7;
+    color: #4b4f56;
+    padding: 10px;
+    text-align: left;
+}
+
+/* Table rows */
+table tr {
+    border-bottom: 1px solid #dadde1;
+}
+
+/* Table data/cells */
+table td {
+    padding: 10px;
+    color: #1c1e21;
+}
+
+/* Table rows on hover (optional) */
+table tr:hover {
+    background-color: #f5f6f7;
+}
+thead,
+tfoot {
+    background-color: rgb(194, 241, 255);
+    color: #fff;
+}
+
+.navbar {
+    position: fixed;
+    top: 0; /* Stick it at the top */
+    left: 0; /* Stick it at the left */
+    width: 100%; /* Full width */
+    background-color: #333; /* Dark background */
+    color: #fff; /* Light text */
+    padding: 10px 0; /* Some padding */
+    z-index: 100; /* Ensure it sits over other content */
+}
+
+.navbar ul {
+    margin: 0; /* Remove default margins */
+    padding: 0; /* Remove default padding */
+    list-style: none; /* Remove list styling */
+    display: flex; /* Layout list items in a row */
+    justify-content: space-around; /* Distribute list items evenly */
+}
+
+.navbar li {
+    display: inline; /* Display inline */
+}
+
+.navbar a {
+    color: #fff; /* Light links */
+    text-decoration: none; /* No underlines on links */
+}
