@@ -20,10 +20,18 @@ body {
 }
 
 .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 2.25rem; /* 20px */
+    margin: 0 auto;
+    width: 100%;
+    max-width: var(--max-width);
 }
 
-nav ul {
+
+.navbar ul {
     list-style: none;
     padding: 0;
 }
@@ -57,11 +65,13 @@ nav ul {
 }
 
 .table {
-    width: 100%;
+    width: 80%; /* or whatever width you prefer */
+    margin: 0 auto;
     border-collapse: collapse;
     margin-bottom: 1.25rem; /* 20px */
     font-size: 0.875rem; /* 14px */
 }
+
 
 table th {
     background-color: var(--color-bg-light);
@@ -96,6 +106,12 @@ tfoot {
 
 .focused {
     background-color: lightblue;
+}
+
+.content-title {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 1em;
 }
 
 
