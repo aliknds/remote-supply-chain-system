@@ -9,8 +9,7 @@ class Table {
     setupEventListeners() {
         this.table.addEventListener('focus', this.handleFocus, true);
         this.table.addEventListener('blur', this.handleBlur, true);
-        this.table.addEventListener('input', this.handleQuantityInput);
-        this.table.addEventListener('keyup', this.handleUnitPriceInput, true);
+        this.table.addEventListener('input', this.handleInput);
         this.table.addEventListener('keyup', this.handleKeyup, true);
     }
     
@@ -24,11 +23,28 @@ class Table {
             }
         }
     }
-
+    
     handleBlur = (event) => {
         if (this.isEditableCell(event.target)) {
             event.target.style.backgroundColor = '';
-            this.updateTable();
+            if (event.target.classList.contains('unit-price')) {
+                const newUnitPrice = parseFloat(event.target.innerText);
+                const rows = this.table.querySelectorAll('tbody tr');
+                let totalSum = 0;
+                rows.forEach((row, index) => {
+                    if (row.querySelector('.unit-price') !== event.target) {
+                        row.querySelector('.unit-price').innerText = newUnitPrice.toFixed(2);
+                    }
+                    let quantity = parseFloat(row.querySelector('.quantity').innerText);
+                    let totalPrice = quantity * newUnitPrice;
+                    totalPrice = isNaN(totalPrice) ? 0 : totalPrice;
+                    row.querySelector('.total-price').innerText = totalPrice.toFixed(2);
+                    totalSum += totalPrice;
+                });
+                this.table.querySelector('tfoot td:last-child strong').innerText = totalSum.toFixed(2);
+            } else {
+                this.updateTable();
+            }
             this.focusTracker.set(event.target, this.getCaretPosition(event.target));
         }
     }
@@ -37,29 +53,15 @@ class Table {
         if (this.isEditableCell(event.target)) {
             const cell = event.target;
             const row = cell.parentNode;
-            const rowIndex = Array.from(this.table.children).indexOf(row);
-            const state = this.state[rowIndex];
-    
             if (cell.classList.contains('quantity')) {
-                state.quantity = parseFloat(cell.innerText);
-            } else if (cell.classList.contains('unit-price')) {
-                const newUnitPrice = parseFloat(cell.innerText);
-    
-                Array.from(this.table.children).forEach((row, index) => {
-                    let unitPriceCell = row.children[2];
-                    if(unitPriceCell.contentEditable === 'true'){
-                        unitPriceCell.innerText = newUnitPrice.toFixed(2);
-                    }
-                    this.state[index].unitPrice = newUnitPrice;
-                    this.updateRow(row, this.state[index]);
-                });
+                let quantity = parseFloat(cell.innerText);
+                let unitPrice = parseFloat(row.querySelector('.unit-price').innerText);
+                let totalPrice = quantity * unitPrice;
+                row.querySelector('.total-price').innerText = isNaN(totalPrice) ? '' : totalPrice.toFixed(2);
                 this.updateTotal();
-                return;
             }
-            this.updateRow(row, state);
-            this.updateTotal();
         }
-    }
+    }      
     
     handleQuantityInput = (event) => {
         if (this.isEditableCell(event.target) && event.target.classList.contains('quantity')) {
@@ -82,10 +84,23 @@ class Table {
                 const row = this.table.querySelectorAll('tbody tr')[index];
                 this.updateRow(row, rowState);
             });
+            this.updateAllUnitPriceCells(newUnitPrice);
             this.updateTotal();
         }
     }
-           
+    
+    
+    updateAllUnitPriceCells = (newUnitPrice) => {
+        const rows = this.table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const unitPriceCell = row.getElementsByClassName('unit-price')[0];
+            if(unitPriceCell) {
+                unitPriceCell.innerText = newUnitPrice.toFixed(2);
+            }
+        });
+    }
+    
+       
     handleKeyup = (event) => {
         if (this.isEditableCell(event.target) && event.target.innerText === '') {
             this.updateTable();
