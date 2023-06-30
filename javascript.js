@@ -37,25 +37,30 @@ class Table {
         if (this.isEditableCell(event.target)) {
             const cell = event.target;
             const row = cell.parentNode;
-            const rowIndex = Array.from(this.table.querySelectorAll('tbody tr')).indexOf(row);
+            const rowIndex = Array.from(this.table.children).indexOf(row);
             const state = this.state[rowIndex];
-            
+    
             if (cell.classList.contains('quantity')) {
                 state.quantity = parseFloat(cell.innerText);
             } else if (cell.classList.contains('unit-price')) {
                 const newUnitPrice = parseFloat(cell.innerText);
-                this.state.forEach((rowState, index) => {
-                    rowState.unitPrice = newUnitPrice;
-                    const row = this.table.querySelectorAll('tbody tr')[index];
-                    this.updateRow(row, rowState);
+    
+                Array.from(this.table.children).forEach((row, index) => {
+                    let unitPriceCell = row.children[2];
+                    if(unitPriceCell.contentEditable === 'true'){
+                        unitPriceCell.innerText = newUnitPrice.toFixed(2);
+                    }
+                    this.state[index].unitPrice = newUnitPrice;
+                    this.updateRow(row, this.state[index]);
                 });
+                this.updateTotal();
+                return;
             }
-            
             this.updateRow(row, state);
             this.updateTotal();
         }
     }
-
+    
     handleQuantityInput = (event) => {
         if (this.isEditableCell(event.target) && event.target.classList.contains('quantity')) {
             const cell = event.target;
@@ -73,6 +78,7 @@ class Table {
             const newUnitPrice = parseFloat(event.target.innerText);
             this.state.forEach((rowState, index) => {
                 rowState.unitPrice = newUnitPrice;
+                rowState.totalPrice = rowState.quantity * newUnitPrice;
                 const row = this.table.querySelectorAll('tbody tr')[index];
                 this.updateRow(row, rowState);
             });
