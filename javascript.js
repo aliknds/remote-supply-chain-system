@@ -2,19 +2,26 @@ class Table {
     constructor(elementId, defaultUnitPrice) {
         this.table = document.getElementById(elementId);
         this.defaultUnitPrice = defaultUnitPrice;
+        this.focusTracker = new Map();
         this.setupEventListeners();
     }
 
     setupEventListeners() {
         this.table.addEventListener('focus', this.handleFocus, true);
         this.table.addEventListener('blur', this.handleBlur, true);
-        this.table.addEventListener('input', this.handleInput);
+        this.table.addEventListener('input', this.handleQuantityInput);
+        this.table.addEventListener('keyup', this.handleUnitPriceInput, true);
         this.table.addEventListener('keyup', this.handleKeyup, true);
     }
+    
 
     handleFocus = (event) => {
         if (this.isEditableCell(event.target)) {
             event.target.style.backgroundColor = 'lightblue';
+            const caretPosition = this.focusTracker.get(event.target);
+            if (caretPosition) {
+                this.setCaretPosition(event.target, caretPosition);
+            }
         }
     }
 
@@ -22,24 +29,57 @@ class Table {
         if (this.isEditableCell(event.target)) {
             event.target.style.backgroundColor = '';
             this.updateTable();
+            this.focusTracker.set(event.target, this.getCaretPosition(event.target));
         }
     }
 
     handleInput = (event) => {
         if (this.isEditableCell(event.target)) {
-            if (event.target.classList.contains('unit-price')) {
-                const selection = this.saveSelection(event.target);
-                const newUnitPrice = parseFloat(event.target.innerText) || this.defaultUnitPrice;
-                const unitPriceCells = this.table.querySelectorAll('.unit-price');
-                unitPriceCells.forEach(cell => {
-                    cell.innerText = newUnitPrice.toFixed(2);
+            const cell = event.target;
+            const row = cell.parentNode;
+            const rowIndex = Array.from(this.table.querySelectorAll('tbody tr')).indexOf(row);
+            const state = this.state[rowIndex];
+            
+            if (cell.classList.contains('quantity')) {
+                state.quantity = parseFloat(cell.innerText);
+            } else if (cell.classList.contains('unit-price')) {
+                const newUnitPrice = parseFloat(cell.innerText);
+                this.state.forEach((rowState, index) => {
+                    rowState.unitPrice = newUnitPrice;
+                    const row = this.table.querySelectorAll('tbody tr')[index];
+                    this.updateRow(row, rowState);
                 });
-                this.restoreSelection(event.target, selection);
             }
-            this.updateTable();
+            
+            this.updateRow(row, state);
+            this.updateTotal();
         }
     }
 
+    handleQuantityInput = (event) => {
+        if (this.isEditableCell(event.target) && event.target.classList.contains('quantity')) {
+            const cell = event.target;
+            const row = cell.parentNode;
+            const rowIndex = Array.from(this.table.querySelectorAll('tbody tr')).indexOf(row);
+            const state = this.state[rowIndex];
+            state.quantity = parseFloat(cell.innerText);
+            this.updateRow(row, state);
+            this.updateTotal();
+        }
+    }
+    
+    handleUnitPriceInput = (event) => {
+        if (this.isEditableCell(event.target) && event.target.classList.contains('unit-price')) {
+            const newUnitPrice = parseFloat(event.target.innerText);
+            this.state.forEach((rowState, index) => {
+                rowState.unitPrice = newUnitPrice;
+                const row = this.table.querySelectorAll('tbody tr')[index];
+                this.updateRow(row, rowState);
+            });
+            this.updateTotal();
+        }
+    }
+           
     handleKeyup = (event) => {
         if (this.isEditableCell(event.target) && event.target.innerText === '') {
             this.updateTable();
@@ -59,10 +99,8 @@ class Table {
             let unitPrice = parseFloat(unitPriceCell.innerText);
 
             if (!unitPrice) {
-                const selection = this.saveSelection(unitPriceCell);
                 unitPriceCell.innerText = this.defaultUnitPrice;
                 unitPrice = this.defaultUnitPrice;
-                this.restoreSelection(unitPriceCell, selection);
             }
 
             if (!quantity) {
@@ -82,54 +120,24 @@ class Table {
         return node.tagName === 'TD' && node.contentEditable === 'true';
     }
 
-    saveSelection(element) {
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            const preSelectionRange = range.cloneRange();
-            preSelectionRange.selectNodeContents(element);
-            preSelectionRange.setEnd(range.startContainer, range.startOffset);
-            const start = preSelectionRange.toString().length;
-
-            return {
-                start: start,
-                end: start + range.toString().length
-            };
-        } else {
-            return null;
+    getCaretPosition(editableDiv) {
+        let caretPos = 0;
+        if (window.getSelection) {
+            const range = window.getSelection().getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(editableDiv);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            caretPos = preCaretRange.toString().length;
         }
+        return caretPos;
     }
 
-    restoreSelection(element, savedSel) {
-        let charIndex = 0;
+    setCaretPosition(editableDiv, pos) {
         const range = document.createRange();
-        range.setStart(element, 0);
+        range.selectNodeContents(editableDiv);
         range.collapse(true);
-        const nodeStack = [element];
-        let node;
-        let foundStart = false;
-        let stop = false;
-
-        while (!stop && (node = nodeStack.pop())) {
-            if (node.nodeType === 3) {
-                const nextCharIndex = charIndex + node.length;
-                if (!foundStart && savedSel.start >= charIndex && savedSel.start <= nextCharIndex) {
-                    range.setStart(node, savedSel.start - charIndex);
-                    foundStart = true;
-                }
-                if (foundStart && savedSel.end >= charIndex && savedSel.end <= nextCharIndex) {
-                    range.setEnd(node, savedSel.end - charIndex);
-                    stop = true;
-                }
-                charIndex = nextCharIndex;
-            } else {
-                let i = node.childNodes.length;
-                while (i--) {
-                    nodeStack.push(node.childNodes[i]);
-                }
-            }
-        }
-
+        range.setEnd(editableDiv, pos);
+        range.setStart(editableDiv, pos);
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
