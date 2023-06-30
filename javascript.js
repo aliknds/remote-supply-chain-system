@@ -30,7 +30,10 @@ class Table {
             if (event.target.classList.contains('unit-price')) {
                 const newUnitPrice = parseFloat(event.target.innerText) || this.defaultUnitPrice;
                 const unitPriceCells = this.table.querySelectorAll('.unit-price');
-                unitPriceCells.forEach(cell => cell.innerText = newUnitPrice.toFixed(2));
+                unitPriceCells.forEach(cell => {
+                    cell.innerText = newUnitPrice.toFixed(2);
+                    this.setCursorToEnd(cell);
+                });
             }
             this.updateTable();
         }
@@ -57,6 +60,7 @@ class Table {
             if (!unitPrice) {
                 unitPriceCell.innerText = this.defaultUnitPrice;
                 unitPrice = this.defaultUnitPrice;
+                this.setCursorToEnd(unitPriceCell);
             }
 
             if (!quantity) {
@@ -74,6 +78,15 @@ class Table {
 
     isEditableCell(node) {
         return node.tagName === 'TD' && node.contentEditable === 'true';
+    }
+
+    setCursorToEnd(el) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 }
 
