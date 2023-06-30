@@ -23,31 +23,23 @@ class Table {
             }
         }
     }
-    
+
     handleBlur = (event) => {
-        if (this.isEditableCell(event.target)) {
-            event.target.style.backgroundColor = '';
-            if (event.target.classList.contains('unit-price')) {
-                const newUnitPrice = parseFloat(event.target.innerText);
-                const rows = this.table.querySelectorAll('tbody tr');
-                let totalSum = 0;
-                rows.forEach((row, index) => {
-                    if (row.querySelector('.unit-price') !== event.target) {
-                        row.querySelector('.unit-price').innerText = newUnitPrice.toFixed(2);
-                    }
-                    let quantity = parseFloat(row.querySelector('.quantity').innerText);
-                    let totalPrice = quantity * newUnitPrice;
-                    totalPrice = isNaN(totalPrice) ? 0 : totalPrice;
-                    row.querySelector('.total-price').innerText = totalPrice.toFixed(2);
-                    totalSum += totalPrice;
-                });
-                this.table.querySelector('tfoot td:last-child strong').innerText = totalSum.toFixed(2);
-            } else {
+    if (this.isEditableCell(event.target)) {
+        event.target.style.backgroundColor = '';
+        if (event.target.classList.contains('unit-price')) {
+            const newUnitPrice = parseFloat(event.target.innerText);
+            if (!isNaN(newUnitPrice)) {
+                this.updateAllUnitPriceCells(newUnitPrice);
                 this.updateTable();
             }
-            this.focusTracker.set(event.target, this.getCaretPosition(event.target));
+        } else if (event.target.classList.contains('quantity')) {
+            this.updateTable();
         }
+        this.focusTracker.set(event.target, this.getCaretPosition(event.target));
     }
+}
+
 
     handleInput = (event) => {
         if (this.isEditableCell(event.target)) {
@@ -78,15 +70,17 @@ class Table {
     handleUnitPriceInput = (event) => {
         if (this.isEditableCell(event.target) && event.target.classList.contains('unit-price')) {
             const newUnitPrice = parseFloat(event.target.innerText);
-            this.state.forEach((rowState, index) => {
-                rowState.unitPrice = newUnitPrice;
-                rowState.totalPrice = rowState.quantity * newUnitPrice;
-                const row = this.table.querySelectorAll('tbody tr')[index];
-                this.updateRow(row, rowState);
-            });
-            this.updateAllUnitPriceCells(newUnitPrice);
-            this.updateTotal();
+            this.updateUnitPrices(newUnitPrice);
+            this.updateTable();
         }
+    }
+
+    updateUnitPrices = (newUnitPrice) => {
+        const rows = this.table.querySelectorAll('tbody tr');
+        rows.forEach((row, index) => {
+            const unitPriceCell = row.querySelector('.unit-price');
+            unitPriceCell.innerText = newUnitPrice.toFixed(2);
+        });
     }
     
     
