@@ -8,8 +8,8 @@ class Table {
 
     setupEventListeners() {
         this.table.addEventListener('focus', this.handleFocus, true);
+        this.table.addEventListener('input', this.handleInput, true); // moved input to capture phase
         this.table.addEventListener('blur', this.handleBlur, true);
-        this.table.addEventListener('input', this.handleInput);
         this.table.addEventListener('keyup', this.handleKeyup, true);
     }
     
@@ -37,8 +37,8 @@ class Table {
             this.updateTable();
         }
         this.focusTracker.set(event.target, this.getCaretPosition(event.target));
+        }       
     }
-}
 
 
     handleInput = (event) => {
@@ -51,9 +51,28 @@ class Table {
                 let totalPrice = quantity * unitPrice;
                 row.querySelector('.total-price').innerText = isNaN(totalPrice) ? '' : totalPrice.toFixed(2);
                 this.updateTotal();
+            } else if (cell.classList.contains('unit-price')) {
+                this.handleUnitPriceInput(event);
             }
         }
-    }      
+    }    
+    
+    handleUnitPriceInput = (event) => {
+        const newUnitPrice = parseFloat(event.target.innerText);
+        const rows = this.table.querySelectorAll('tbody tr');
+        let totalSum = 0;
+        rows.forEach((row, index) => {
+            if (row.querySelector('.unit-price') !== event.target) {
+                row.querySelector('.unit-price').innerText = newUnitPrice.toFixed(2);
+            }
+            let quantity = parseFloat(row.querySelector('.quantity').innerText);
+            let totalPrice = quantity * newUnitPrice;
+            totalPrice = isNaN(totalPrice) ? 0 : totalPrice;
+            row.querySelector('.total-price').innerText = totalPrice.toFixed(2);
+            totalSum += totalPrice;
+        });
+        this.table.querySelector('tfoot td:last-child strong').innerText = totalSum.toFixed(2);
+    }
     
     handleQuantityInput = (event) => {
         if (this.isEditableCell(event.target) && event.target.classList.contains('quantity')) {
