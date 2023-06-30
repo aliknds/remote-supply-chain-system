@@ -114,6 +114,30 @@ tfoot {
     margin-bottom: 1em;
 }
 
+.info, table {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.left, .right {
+    width: 45%; /* Adjust as needed */
+}
+
+footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.25rem; /* 20px */
+    margin: 0 auto;
+    width: 100%;
+    max-width: var(--max-width);
+}
 
 @media screen and (min-width: 37.5rem) { /* 600px */
     body {
