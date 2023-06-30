@@ -27,6 +27,11 @@ class Table {
 
     handleInput = (event) => {
         if (this.isEditableCell(event.target)) {
+            if (event.target.classList.contains('unit-price')) {
+                const newUnitPrice = parseFloat(event.target.innerText) || this.defaultUnitPrice;
+                const unitPriceCells = this.table.querySelectorAll('.unit-price');
+                unitPriceCells.forEach(cell => cell.innerText = newUnitPrice.toFixed(2));
+            }
             this.updateTable();
         }
     }
