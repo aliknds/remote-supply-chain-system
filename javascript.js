@@ -2,17 +2,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     var table = document.getElementById('data-table');
     var defaultUnitPrice = 14219.21;
 
-    var quantityInputs = table.querySelectorAll('.quantity');
-    var unitPriceInputs = table.querySelectorAll('.unit-price');
-    
-    quantityInputs.forEach(input => input.addEventListener('input', updateTotal));
-    unitPriceInputs.forEach(input => {
-        input.addEventListener('input', function(event) {
-            updateTotal(event);
-            updateAllUnitPrices(event);
-        });
-    });
-
     // Attach event listener to all quantity and unit-price cells
     var editableCells = table.querySelectorAll('.quantity, .unit-price');
     for (var i = 0; i < editableCells.length; i++) {
@@ -21,6 +10,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
         editableCells[i].addEventListener('blur', handleBlur);
         // Added keyup event
         editableCells[i].addEventListener('keyup', handleKeyup); 
+
+        // If the cell is a unit price cell, add a special event listener
+        if (editableCells[i].classList.contains('unit-price')) {
+            editableCells[i].addEventListener('input', updateAllUnitPrices);
+        }
     }
 
     function handleFocus(e) {
@@ -37,30 +31,68 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
+    // New function to update all unit prices
+    function updateAllUnitPrices(e) {
+        var newUnitPrice = e.target.innerText;
+        var rows = table.getElementsByTagName('tr');
+
+        for (var i = 0; i < rows.length; i++) {
+            var unitPriceCell = rows[i].getElementsByClassName('unit-price')[0];
+            if (unitPriceCell) {
+                unitPriceCell.innerText = newUnitPrice;
+            }
+
+            // Manually call the updateTotal function for the row
+            var quantityCell = rows[i].getElementsByClassName('quantity')[0];
+            if (quantityCell) {
+                updateTotal({ target: quantityCell });
+            }
+        }
+    }
+
     function updateTotal(e) {
-        var row = e.target.parentNode.parentNode;
-        var quantityInput = row.querySelector('.quantity');
-        var unitPriceInput = row.querySelector('.unit-price');
-        var totalPriceCell = row.querySelector('.total-price');
+        // Get the row of the cell that was changed
+        var row = e.target.parentNode;
 
-        var quantity = quantityInput.value ? parseFloat(quantityInput.value) : 0;
-        var unitPrice = unitPriceInput.value ? parseFloat(unitPriceInput.value) : 0;
+        // Get the quantity, unit price, and total price cells
+        var quantityCell = row.getElementsByClassName('quantity')[0];
+        var unitPriceCell = row.getElementsByClassName('unit-price')[0];
+        var totalPriceCell = row.getElementsByClassName('total-price')[0];
 
-        if(quantity && !unitPrice){
-            unitPriceInput.value = defaultUnitPrice;
+        // Reset the background color of the cells
+        quantityCell.style.backgroundColor = '';
+        unitPriceCell.style.backgroundColor = '';
+
+        // Parse the quantity and unit price
+        var quantity = quantityCell.innerText ? parseFloat(quantityCell.innerText) : 0;
+        var unitPrice = unitPriceCell.innerText ? parseFloat(unitPriceCell.innerText) : 0;
+
+        // If quantity is entered and unit price is not present, set default unit price
+        if(quantity && !unitPriceCell.innerText){
+            unitPriceCell.innerText = defaultUnitPrice;
             unitPrice = defaultUnitPrice;
+        } else if (!quantity || !unitPrice) {
+            quantityCell.innerText = '';
+            unitPriceCell.innerText = '';
+            totalPriceCell.innerText = ''; // Clear total if quantity or unit price is not valid
+            updateDun();
+            return;
         }
 
+        // Calculate the new total price
         var totalPrice = quantity * unitPrice;
+
+        // Update the total price cell
         if (!isNaN(totalPrice)) {
             totalPriceCell.innerText = totalPrice.toFixed(2);
         } else {
-            totalPriceCell.innerText = '';
+            totalPriceCell.innerText = ''; // Show an empty string instead of NaN
         }
 
         updateDun();
     }
 
+    // Calculate and update the Дун cell
     function updateDun() {
         var totalPriceCells = table.querySelectorAll('.total-price');
         var sum = 0;
@@ -72,11 +104,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }
         });
 
+        // Get the Дун cell
         var dunCell = table.querySelector('tbody tr:last-child td:last-child strong');
+
+        // Update the Дун cell
         dunCell.innerText = sum.toFixed(2);
     }
-
-    quantityInputs.forEach(input => updateTotal({ target: input }));
     
     // Initialize the table
     updateDun();
